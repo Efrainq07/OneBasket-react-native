@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, TouchableWithoutFeedback } from 'react-native';
 import { ScrollView } from "react-native-gesture-handler";
 import { Feather, Entypo } from '@expo/vector-icons';
 import { deviceWidth, deviceHeight } from '../../constants/dimensions';
-import { LineChart } from 'react-native-svg-charts';
+import { VictoryLine, VictoryChart } from 'victory-native';
 import DateBar from '../../components/dateBar/dateBar';
 import HomeScreenNews from '../../components/homeScreenElements/homeScreenNews';
 import List from '../../components/list/list';
@@ -34,6 +34,7 @@ const HomeScreen = props => {
     });
 
     const [graphData, setGraphData] = useState(accountData.today.chartDataPoints);
+
 
 
     const [showHeader, setShowHeader] = useState(false);
@@ -164,15 +165,33 @@ const HomeScreen = props => {
                         <Text style={styles.ahChangeDollarAmountText}>$24.1800</Text>
                         <Text style={styles.changeTimeText}>After-Hours</Text>
                     </View>
-                </View>  : <View style={{width: '100%', height: 25}}/>}
+                </View> : <View style={{ width: '100%', height: 25 }} />}
                 <View style={styles.graphContainer}>
-                    <LineChart
-                        style={{ width: '100%', height: '100%', }}
-                        data={graphData}
-                        svg={{ stroke: '#00c806', strokeWidth: 1.7 }}
-                        contentInset={{ top: 0, bottom: 0 }}
-                        showGrid={false}
-                    />
+                    <VictoryChart
+                        width={deviceWidth}
+                        height={170}
+                        padding={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                        theme={{
+                            axis: {
+                                style: {
+                                    axis: { stroke: "transparent" },
+                                    grid: { stroke: "transparent" },
+                                    ticks: { stroke: "transparent" },
+                                    tickLabels: { fill: "transparent" }
+                                }
+                            }
+                        }}
+                    >
+                        <VictoryLine
+                            data={graphData && graphData.length > 0
+                                ? graphData.map((value, index) => ({ x: index, y: value }))
+                                : []}
+                            style={{
+                                data: { stroke: "#00c806", strokeWidth: 1.7 }
+                            }}
+                            animate={{ duration: 1000 }}
+                        />
+                    </VictoryChart>
                 </View>
                 <DateBar setChartData={setChartData} color={'#00c806'} />
                 <View style={styles.graphBottomBorder}></View>
@@ -220,13 +239,7 @@ const HomeScreen = props => {
 }
 
 export default HomeScreen
-
-
-export const screenOptions = navData => {
-    return {
-        title: navData.route.params?.title ? navData.route.params.title : '',
-    }
-}
+export { screenOptions } from './homeScreenOptions'
 
 const styles = StyleSheet.create({
     container: {

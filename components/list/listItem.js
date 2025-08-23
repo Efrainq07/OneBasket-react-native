@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { FlatList, StyleSheet, Text, TouchableHighlight, View, } from 'react-native';
 import DraggableFlatList from 'react-native-draggable-flatlist';
-import { LineChart } from 'react-native-svg-charts';
+import { VictoryLine, VictoryChart } from 'victory-native';
 import { deviceWidth } from '../../constants/dimensions';
 import * as Haptics from 'expo-haptics';
 import { stockData, cryptoData } from '../../data/dumb';
 
 
 
-const listItem = props => {
+const ListItem = props => {
 
 
     const maxTextLength = 11;
@@ -86,13 +86,31 @@ const listItem = props => {
                         <Text style={styles.nameText} >{item.name.length > maxTextLength ? item.name.slice(0,12) + '...' : item.name}</Text>
                     </View>
                     <View style={styles.graphContainer}>
-                        <LineChart
-                            style={{ width: '100%', height: '100%', }}
-                            data={item.intradayData}
-                            svg={{ stroke: (props.stock && item.up) ? stockUpColor : (props.stock) ? stockDownColor : item.up ? cryptoUpColor : cryptoDownColor, strokeWidth: 1.3 }}
-                            contentInset={{ top: 6, bottom: 6 }}
-                            showGrid={false}
-                        />
+                        <VictoryChart
+                            width={80}
+                            height={40}
+                            padding={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                            domainPadding={{ x: 0, y: 0 }}
+                            theme={{
+                                axis: {
+                                    style: {
+                                        axis: { stroke: "transparent" },
+                                        grid: { stroke: "transparent" },
+                                        ticks: { stroke: "transparent" },
+                                        tickLabels: { fill: "transparent" }
+                                    }
+                                }
+                            }}
+                        >
+                            <VictoryLine
+                                data={item.intradayData && item.intradayData.length > 0
+                                    ? item.intradayData.map((value, index) => ({ x: index, y: value }))
+                                    : []}
+                                style={{
+                                    data: { stroke: (props.stock && item.up) ? stockUpColor : (props.stock) ? stockDownColor : item.up ? cryptoUpColor : cryptoDownColor, strokeWidth: 1.3 }
+                                }}
+                            />
+                        </VictoryChart>
                     </View>
                     <View style={{...styles.priceContainer, backgroundColor: (props.stock && item.up) ? stockUpColor : (props.stock) ? stockDownColor : item.up ? cryptoUpColor : cryptoDownColor}}>
                         <Text style={styles.priceText}>{'$' + item.price}</Text>
@@ -119,7 +137,7 @@ const listItem = props => {
     )
 }
 
-export default listItem
+export default ListItem
 
 const styles = StyleSheet.create({
     itemContainer: {

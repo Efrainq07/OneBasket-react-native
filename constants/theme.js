@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { AsyncStorage } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const themes = {
     light: {

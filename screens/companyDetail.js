@@ -4,7 +4,7 @@ import { deviceWidth, deviceHeight } from '../constants/dimensions';
 import { Feather, Entypo, Ionicons } from '@expo/vector-icons';
 import { HeaderButtons, Item } from 'react-navigation-header-buttons';
 import CustomHeaderButton from '../components/UI/headerButton/headerButton';
-import { LineChart } from 'react-native-svg-charts';
+import { VictoryLine, VictoryChart } from 'victory-native';
 import DateBar from '../components/dateBar/dateBar';
 import StatsContainer from '../components/detailScreenElements/statsContainer';
 import NewsListItem from '../components/list/newsListItem';
@@ -15,7 +15,7 @@ import RelatedListContainer from '../components/detailScreenElements/relatedList
 import AlsoOwnContainer from '../components/detailScreenElements/alsoOwnContainer';
 import AboutContainer from '../components/detailScreenElements/aboutContainer';
 
-const companyDetailScreen = props => {
+const CompanyDetailScreen = props => {
 
 
     const stockUpColor = '#00c806';
@@ -184,13 +184,32 @@ const companyDetailScreen = props => {
                     </View>
                 </View>
                 <View style={styles.graphContainer}>
-                    <LineChart
-                        style={{ width: '100%', height: '100%', }}
-                        data={graphData ? graphData : []}
-                        svg={{ stroke: details.up ? stockUpColor : stockDownColor, strokeWidth: 1.7 }}
-                        contentInset={{ top: 0, bottom: 0 }}
-                        showGrid={false}
-                    />
+                    <VictoryChart
+                        width={deviceWidth}
+                        height={225}
+                        padding={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                        domainPadding={{ x: 0, y: 0 }}
+                        theme={{
+                            axis: {
+                                style: {
+                                    axis: { stroke: "transparent" },
+                                    grid: { stroke: "transparent" },
+                                    ticks: { stroke: "transparent" },
+                                    tickLabels: { fill: "transparent" }
+                                }
+                            }
+                        }}
+                    >
+                        <VictoryLine
+                            data={graphData && graphData.length > 0
+                                ? graphData.map((value, index) => ({ x: index, y: value }))
+                                : []}
+                            style={{
+                                data: { stroke: details.up ? stockUpColor : stockDownColor, strokeWidth: 1.7 }
+                            }}
+                            animate={{ duration: 1000 }}
+                        />
+                    </VictoryChart>
                 </View>
                 <View style={styles.dateBarContainer}>
                     <DateBar setChartData={setChartData} color={details.up ? stockUpColor : stockDownColor} />
@@ -263,7 +282,7 @@ const companyDetailScreen = props => {
     )
 }
 
-export default companyDetailScreen;
+export default CompanyDetailScreen;
 
 export const screenOptions = navData => {
     return {

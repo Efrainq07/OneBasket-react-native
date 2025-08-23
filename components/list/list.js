@@ -5,7 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 
-const list = props => {
+const List = props => {
 
     const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -42,7 +42,7 @@ const list = props => {
     )
 }
 
-export default list
+export default List
 
 const styles = StyleSheet.create({
     container: {

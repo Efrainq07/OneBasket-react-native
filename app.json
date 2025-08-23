@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "rb-clone",
-    "slug": "rb-clone",
+    "slug": "onebasket",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,7 +11,7 @@
       "backgroundColor": "#ffffff"
     },
     "updates": {
-      "fallbackToCacheTimeout": 0
+      "url": "https://u.expo.dev/7113adc7-53f4-45dd-a006-3d2553e3da51"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -28,6 +28,16 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7113adc7-53f4-45dd-a006-3d2553e3da51"
+      }
+    },
+    "owner": "nanquiedo",
+    "plugins": [
+      "expo-font",
+      "expo-web-browser"
+    ]
   }
 }

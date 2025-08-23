@@ -7,7 +7,7 @@ import * as Animatable from 'react-native-animatable';
 
 
 
-const homeScreenNews = props => {
+const HomeScreenNews = props => {
 
 
     const _viewRef = useRef();
@@ -191,7 +191,7 @@ const homeScreenNews = props => {
     )
 }
 
-export default homeScreenNews
+export default HomeScreenNews
 
 const styles = StyleSheet.create({
     container: {

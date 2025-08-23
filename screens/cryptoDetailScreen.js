@@ -4,16 +4,15 @@ import { deviceWidth, deviceHeight } from '../constants/dimensions';
 import { Feather, Entypo, Ionicons } from '@expo/vector-icons';
 import { HeaderButtons, Item } from 'react-navigation-header-buttons';
 import CustomHeaderButton from '../components/UI/headerButton/headerButton';
-import { LineChart } from 'react-native-svg-charts';
+import { VictoryLine, VictoryChart } from 'victory-native';
 import CryptoDateBar from '../components/dateBar/cryptoDateBar';
 import NewsListItem from '../components/list/newsListItem';
 import * as WebBrowser from 'expo-web-browser';
-import * as shape from 'd3-shape';
 import Collapsible from 'react-native-collapsible';
 
 
 
-const cryptoDetailScreen = props => {
+const CryptoDetailScreen = props => {
 
     const cryptoDownColor = '#FF5A87';
     const cryptoUpColor = '#CDF460';
@@ -192,22 +191,32 @@ const cryptoDetailScreen = props => {
                     </View>
                 </View>
                 <View style={styles.graphContainer}>
-                    <LineChart
-                        style={{ width: '100%', height: '100%', }}
-                        data={graphData ? graphData : []}
-                        svg={{ stroke: details.up ? cryptoUpColor : cryptoDownColor, strokeWidth: 1.7 }}
-                        contentInset={{ top: 12, bottom: 12 }}
-                        showGrid={false}
+                    <VictoryChart
+                        width={deviceWidth}
+                        height={deviceHeight / 2.85}
+                        padding={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                        domainPadding={{ x: 0, y: 0 }}
+                        theme={{
+                            axis: {
+                                style: {
+                                    axis: { stroke: "transparent" },
+                                    grid: { stroke: "transparent" },
+                                    ticks: { stroke: "transparent" },
+                                    tickLabels: { fill: "transparent" }
+                                }
+                            }
+                        }}
                     >
-                        <LineChart
-                            style={{ width: '100%', height: '100%', }}
-                            data={graphData ? graphData : []}
-                            svg={{ stroke: details.up ? `rgba(205, 244, 96, 0.35)` : `rgba(255, 90, 135, 0.35)`, strokeWidth: 6 }}
-                            contentInset={{ top: 12, bottom: 12 }}
-                            curve={shape.curveNatural}
-                            showGrid={false}
+                        <VictoryLine
+                            data={graphData && graphData.length > 0
+                                ? graphData.map((value, index) => ({ x: index, y: value }))
+                                : []}
+                            style={{
+                                data: { stroke: details.up ? cryptoUpColor : cryptoDownColor, strokeWidth: 1.7 }
+                            }}
+                            animate={{ duration: 1000 }}
                         />
-                    </LineChart>
+                    </VictoryChart>
                 </View>
                 <View style={styles.dateBarContainer}>
                     <CryptoDateBar setChartData={setChartData} color={details.up ? cryptoUpColor : cryptoDownColor} />
@@ -255,7 +264,7 @@ const cryptoDetailScreen = props => {
     )
 }
 
-export default cryptoDetailScreen;
+export default CryptoDetailScreen;
 
 export const screenOptions = navData => {
     return {

@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 
-const followingContainer = () => {
+const FollowingContainer = () => {
     return (
         <View style={styles.followingContainer}>
         <Text style={styles.followingTitleText}>Following</Text>
@@ -26,7 +26,7 @@ const followingContainer = () => {
     )
 }
 
-export default followingContainer
+export default FollowingContainer
 
 const styles = StyleSheet.create({
     followingContainer: {

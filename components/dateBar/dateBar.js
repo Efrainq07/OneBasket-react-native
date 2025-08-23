@@ -45,8 +45,7 @@ const DateBar = React.memo(props => {
             {chartViews}
         </View>
     )
-}
-)
+})
 
 const styles = StyleSheet.create({
     bar: {

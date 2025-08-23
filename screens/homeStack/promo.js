@@ -8,7 +8,7 @@ import * as WebBrowser from 'expo-web-browser';
 
 
 
-const promo = props => {
+const Promo = props => {
 
 
     const learnMoreUrl = 'https://robinhood.com/us/en/support/articles/invite-friends-get-free-stock/';
@@ -102,7 +102,7 @@ const promo = props => {
     )
 }
 
-export default promo;
+export default Promo;
 
 export const screenOptions = navData => {
     return {
