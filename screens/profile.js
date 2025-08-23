@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { deviceWidth, deviceHeight } from '../constants/dimensions';
 import HeadListItem from '../components/list/profileHeadListItem';
 import ProfileSettingListItem from '../components/list/profileSettingListItem';
+import { useAuth } from '../context/AuthContext';
 
 const ProfileScreen = props => {
 
     const [showHeader, setShowHeader] = useState(false);
+    const { logout } = useAuth();
 
 
     const settings = [
@@ -66,6 +68,25 @@ const ProfileScreen = props => {
         }
     }
 
+    const handleLogout = () => {
+        Alert.alert(
+            'Log Out',
+            'Are you sure you want to log out?',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Log Out',
+                    onPress: logout,
+                    style: 'destructive',
+                },
+            ],
+            { cancelable: true }
+        );
+    };
+
 
     return (
         <ScrollView contentContainerStyle={styles.container}  scrollEventThrottle={16} onScroll={handleScroll}>
@@ -110,7 +131,9 @@ const ProfileScreen = props => {
                 <Text style={styles.accountNoTitle}>Account No.</Text>
                 <Text style={styles.accountNoText}>(RHS) 111222333</Text>
             </View>
-            <Text style={styles.logOutText}>Log Out</Text>
+            <TouchableOpacity onPress={handleLogout}>
+                <Text style={styles.logOutText}>Log Out</Text>
+            </TouchableOpacity>
         </ScrollView>
     )
 }
