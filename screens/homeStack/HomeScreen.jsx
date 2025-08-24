@@ -163,34 +163,6 @@ const HomeScreen = props => {
                         <Text style={styles.changeTimeText}>After-Hours</Text>
                     </View>
                 </View> : <View style={{ width: '100%', height: 25 }} />}
-                <View style={styles.graphContainer}>
-                    <VictoryChart
-                        width={deviceWidth}
-                        height={170}
-                        padding={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                        theme={{
-                            axis: {
-                                style: {
-                                    axis: { stroke: "transparent" },
-                                    grid: { stroke: "transparent" },
-                                    ticks: { stroke: "transparent" },
-                                    tickLabels: { fill: "transparent" }
-                                }
-                            }
-                        }}
-                    >
-                        <VictoryLine
-                            data={graphData && graphData.length > 0
-                                ? graphData.map((value, index) => ({ x: index, y: value }))
-                                : []}
-                            style={{
-                                data: { stroke: "#00c806", strokeWidth: 1.7 }
-                            }}
-                            animate={{ duration: 1000, easing: "linear" }}
-                        />
-
-                    </VictoryChart>
-                </View>
                 <DateBar setChartData={setChartData} color={'#fff'} />
                 <View style={styles.graphBottomBorder}></View>
                 <TouchableWithoutFeedback onPress={goToBP}>

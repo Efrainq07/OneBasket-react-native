@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useDisconnect} from '@reown/appkit-ethers-react-native';
+import { useDisconnect, useAppKitAccount} from '@reown/appkit-ethers-react-native';
 
 
 const AuthContext = createContext({});
@@ -13,6 +13,7 @@ export const AuthProvider = ({ children }) => {
     const [walletAddress, setWalletAddress] = useState(null);
     const [authMethod, setAuthMethod] = useState(null); // 'email' or 'wallet'
      const { disconnect } = useDisconnect();
+     const {address, isConnected} = useAppKitAccount();
 
     useEffect(() => {
         checkAuthStatus();
@@ -20,14 +21,11 @@ export const AuthProvider = ({ children }) => {
 
     const checkAuthStatus = async () => {
         try {
-            const authToken = await AsyncStorage.getItem('authToken');
-            console.log(authToken)
             const questionnaireCompleted = await AsyncStorage.getItem('questionnaireCompleted');
             const sectorQuestionnaireCompleted = await AsyncStorage.getItem('sectorQuestionnaireCompleted');
             const storedWalletAddress = await AsyncStorage.getItem('walletAddress');
             const storedAuthMethod = await AsyncStorage.getItem('authMethod');
-            
-            setIsAuthenticated(!!authToken);
+            setIsAuthenticated(isConnected)
             setHasCompletedQuestionnaire(!!questionnaireCompleted);
             setHasCompletedSectorQuestionnaire(!!sectorQuestionnaireCompleted);
             setWalletAddress(storedWalletAddress);
@@ -59,7 +57,6 @@ export const AuthProvider = ({ children }) => {
             const { address, isConnected } = walletData;
             
             if (isConnected && address) {
-                await AsyncStorage.setItem('authToken', 'logged_in');
                 await AsyncStorage.setItem('walletAddress', address);
                 await AsyncStorage.setItem('authMethod', 'wallet');
                 setIsAuthenticated(true);
@@ -110,7 +107,6 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await AsyncStorage.removeItem('authToken');
             await AsyncStorage.removeItem('userEmail');
             await AsyncStorage.removeItem('userFirstName');
             await AsyncStorage.removeItem('userLastName');
