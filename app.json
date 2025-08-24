@@ -1,10 +1,11 @@
 {
   "expo": {
-    "name": "rb-clone",
+    "name": "onebasket",
     "slug": "onebasket",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "scheme": "onebasket",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -13,18 +14,37 @@
     "updates": {
       "url": "https://u.expo.dev/7113adc7-53f4-45dd-a006-3d2553e3da51"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "rb-clone"
+      "bundleIdentifier": "com.onebasket.app",
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "metamask",
+          "trust",
+          "safe",
+          "rainbow",
+          "uniswap"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "package": "com.onebasket.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "onebasket"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"

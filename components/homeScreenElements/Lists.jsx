@@ -1,0 +1,54 @@
+import React from 'react'
+import { StyleSheet, Text, View } from 'react-native';
+import { stockData, cryptoData } from '@/data/dumb';
+import List from '../list/List';
+import ListItem from '../list/ListItem/ListItem';
+
+
+const lists = props => {
+
+
+    const onDragStart = () => {
+        setScrollEnabled(false);
+    }
+
+    const onDragEnd = () => {
+        setScrollEnabled(true);
+    }
+
+
+    return (
+        <View style={styles.listViewContainer}>
+        <Text style={styles.listTitleText}>Lists</Text>
+        <List
+            emoji={"👾"}
+            listAmount={cryptoData.length}
+            listName={'Cryptos to Watch'}
+        >
+            <ListItem onDragStart={onDragStart} onDragEnd={onDragEnd} data={cryptoData} parentRef={props.parentRef} />
+        </List>
+        <List
+            emoji={"⚡️"}
+            listAmount={stockData.length}
+            listName={'My First List'}
+        >
+            <ListItem onDragStart={onDragStart} onDragEnd={onDragEnd} data={stockData} stock parentRef={props.parenRef} />
+        </List>
+    </View>
+    )
+}
+
+export default lists
+
+const styles = StyleSheet.create({
+    listViewContainer: {
+        marginTop: 42,
+        width: '100%',
+    },
+    listTitleText: {
+        fontSize: 24,
+        fontWeight: '500',
+        marginLeft: '6%',
+        marginBottom: 26
+    },
+})
