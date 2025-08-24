@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useDisconnect, useAppKitAccount} from '@reown/appkit-ethers-react-native';
-
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { useDisconnect, useAppKitAccount, useAppKitProvider} from '@reown/appkit-ethers-react-native';
+import { UserService } from '../services/userService';
+import { WalletAuthService } from '../services/walletAuthService';
+import { supabase } from '../supabaseClient';
 
 const AuthContext = createContext({});
 
@@ -11,25 +12,116 @@ export const AuthProvider = ({ children }) => {
     const [hasCompletedQuestionnaire, setHasCompletedQuestionnaire] = useState(false);
     const [hasCompletedSectorQuestionnaire, setHasCompletedSectorQuestionnaire] = useState(false);
     const [walletAddress, setWalletAddress] = useState(null);
-    const [authMethod, setAuthMethod] = useState(null); // 'email' or 'wallet'
-     const { disconnect } = useDisconnect();
-     const {address, isConnected} = useAppKitAccount();
+    const [authMethod, setAuthMethod] = useState(null);
+    const [userProfile, setUserProfile] = useState(null);
+    const [supabaseUser, setSupabaseUser] = useState(null);
+    const [supabaseSession, setSupabaseSession] = useState(null);
+    const { disconnect } = useDisconnect();
+    const {address, isConnected, chainId} = useAppKitAccount();
+    const { walletProvider } = useAppKitProvider('eip155');
+    const isLoadingProfile = useRef(false);
 
     useEffect(() => {
-        checkAuthStatus();
+        const initAuth = async () => {
+            await checkAuthStatus();
+        };
+        initAuth();
     }, []);
+
+    useEffect(() => {
+        const handleConnectionChange = async () => {
+            if (isConnected && address && walletProvider && !isLoadingProfile.current) {
+                await loadUserProfile(address);
+            }
+        };
+        handleConnectionChange();
+    }, [isConnected, address, walletProvider]);
+
+    const loadUserProfile = async (walletAddr) => {
+        // Prevent duplicate calls
+        if (isLoadingProfile.current) {
+            console.log('Profile loading already in progress, skipping...');
+            return;
+        }
+        
+        try {
+            isLoadingProfile.current = true;
+            setIsLoading(true);
+            
+            // First authenticate with Supabase using SIWE to get JWT tokens
+            if (!walletProvider) {
+                console.error('No wallet provider available');
+                return;
+            }
+
+            console.log('Starting SIWE authentication for wallet:', walletAddr);
+            
+            const { data: authData, error: authError } = await WalletAuthService.signInWithWallet(
+                walletProvider, 
+                walletAddr, 
+                chainId || 1
+            );
+            
+            if (authError) {
+                console.error('SIWE Authentication error:', authError);
+                return;
+            }
+
+            console.log('SIWE auth response:', authData);
+
+            if (authData?.session && authData.session.access_token) {
+                console.log('SIWE authentication successful, setting session');
+                
+                // Store Supabase session data
+                setSupabaseSession(authData.session);
+                setSupabaseUser(authData.user);
+                
+                // Now that we have a JWT session, load user profile
+                const { data, error } = await UserService.getUserProfile(walletAddr);
+                
+                if (data) {
+                    setUserProfile(data);
+                    setHasCompletedQuestionnaire(data.questionnaire_completed || false);
+                    setHasCompletedSectorQuestionnaire(data.sector_questionnaire_completed || false);
+                    setWalletAddress(data.wallet_address);
+                } else {
+                    // Profile should have been created by edge function, set basic data
+                    setWalletAddress(walletAddr.toLowerCase());
+                    setHasCompletedQuestionnaire(false);
+                    setHasCompletedSectorQuestionnaire(false);
+                }
+                
+                setAuthMethod('wallet');
+                setIsAuthenticated(true);
+            } else {
+                console.error('No access token received from SIWE authentication');
+                console.log('Available session data:', authData?.session);
+                console.error('Authentication failed - social wallets may have signing issues');
+            }
+            
+        } catch (error) {
+            console.error('Error loading user profile:', error);
+        } finally {
+            isLoadingProfile.current = false;
+            setIsLoading(false);
+        }
+    };
 
     const checkAuthStatus = async () => {
         try {
-            const questionnaireCompleted = await AsyncStorage.getItem('questionnaireCompleted');
-            const sectorQuestionnaireCompleted = await AsyncStorage.getItem('sectorQuestionnaireCompleted');
-            const storedWalletAddress = await AsyncStorage.getItem('walletAddress');
-            const storedAuthMethod = await AsyncStorage.getItem('authMethod');
-            setIsAuthenticated(isConnected)
-            setHasCompletedQuestionnaire(!!questionnaireCompleted);
-            setHasCompletedSectorQuestionnaire(!!sectorQuestionnaireCompleted);
-            setWalletAddress(storedWalletAddress);
-            setAuthMethod(storedAuthMethod);
+            // Only update authentication status, don't trigger profile loading here
+            // Profile loading is handled by the separate useEffect for connection changes
+            setIsAuthenticated(isConnected);
+            
+            if (!isConnected) {
+                setWalletAddress(null);
+                setAuthMethod(null);
+                setUserProfile(null);
+                setSupabaseUser(null);
+                setSupabaseSession(null);
+                setHasCompletedQuestionnaire(false);
+                setHasCompletedSectorQuestionnaire(false);
+            }
         } catch (error) {
             console.error('Error checking auth status:', error);
         } finally {
@@ -40,8 +132,9 @@ export const AuthProvider = ({ children }) => {
     const login = async (address) => {
         try {
             setIsLoading(true);
+            await loadUserProfile(address);
             setIsAuthenticated(true);
-            await AsyncStorage.setItem('address', address);
+            return { success: true };
         } catch (error) {
             console.error('Login error:', error);
             return { success: false, error: 'Login failed' };
@@ -57,11 +150,8 @@ export const AuthProvider = ({ children }) => {
             const { address, isConnected } = walletData;
             
             if (isConnected && address) {
-                await AsyncStorage.setItem('walletAddress', address);
-                await AsyncStorage.setItem('authMethod', 'wallet');
+                await loadUserProfile(address);
                 setIsAuthenticated(true);
-                setWalletAddress(address);
-                setAuthMethod('wallet');
                 return { success: true };
             } else {
                 return { success: false, error: 'Failed to connect wallet' };
@@ -77,10 +167,23 @@ export const AuthProvider = ({ children }) => {
     const completeQuestionnaire = async (selectedProfile) => {
         try {
             setIsLoading(true);
-            await AsyncStorage.setItem('questionnaireCompleted', 'true');
-            await AsyncStorage.setItem('riskProfile', selectedProfile.id);
-            await AsyncStorage.setItem('riskProfileData', JSON.stringify(selectedProfile));
+            
+            if (!walletAddress) {
+                return { success: false, error: 'No wallet address found' };
+            }
+
+            const { data, error } = await UserService.updateQuestionnaireStatus(walletAddress, {
+                riskProfile: selectedProfile.id,
+                riskProfileData: selectedProfile,
+            });
+
+            if (error) {
+                throw error;
+            }
+            
             setHasCompletedQuestionnaire(true);
+            setUserProfile(prev => ({ ...prev, ...data }));
+            
             return { success: true };
         } catch (error) {
             console.error('Questionnaire completion error:', error);
@@ -93,9 +196,20 @@ export const AuthProvider = ({ children }) => {
     const completeSectorQuestionnaire = async (selectedSectors) => {
         try {
             setIsLoading(true);
-            await AsyncStorage.setItem('sectorQuestionnaireCompleted', 'true');
-            await AsyncStorage.setItem('selectedSectors', JSON.stringify(selectedSectors));
+            
+            if (!walletAddress) {
+                return { success: false, error: 'No wallet address found' };
+            }
+
+            const { data, error } = await UserService.updateSectorQuestionnaire(walletAddress, selectedSectors);
+
+            if (error) {
+                throw error;
+            }
+            
             setHasCompletedSectorQuestionnaire(true);
+            setUserProfile(prev => ({ ...prev, ...data }));
+            
             return { success: true };
         } catch (error) {
             console.error('Sector questionnaire completion error:', error);
@@ -107,22 +221,18 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await AsyncStorage.removeItem('userEmail');
-            await AsyncStorage.removeItem('userFirstName');
-            await AsyncStorage.removeItem('userLastName');
-            await AsyncStorage.removeItem('questionnaireCompleted');
-            await AsyncStorage.removeItem('riskProfile');
-            await AsyncStorage.removeItem('riskProfileData');
-            await AsyncStorage.removeItem('sectorQuestionnaireCompleted');
-            await AsyncStorage.removeItem('selectedSectors');
-            await AsyncStorage.removeItem('walletAddress');
-            await AsyncStorage.removeItem('authMethod');
-            await disconnect()
+            // Disconnect wallet
+            await disconnect();
+            
+            // Clear all state
             setIsAuthenticated(false);
             setHasCompletedQuestionnaire(false);
             setHasCompletedSectorQuestionnaire(false);
             setWalletAddress(null);
             setAuthMethod(null);
+            setUserProfile(null);
+            setSupabaseUser(null);
+            setSupabaseSession(null);
         } catch (error) {
             console.error('Logout error:', error);
         }
@@ -135,11 +245,15 @@ export const AuthProvider = ({ children }) => {
         hasCompletedSectorQuestionnaire,
         walletAddress,
         authMethod,
+        userProfile,
+        supabaseUser,
+        supabaseSession,
         login,
         walletLogin,
         completeQuestionnaire,
         completeSectorQuestionnaire,
-        logout
+        logout,
+        loadUserProfile
     };
 
     return (
